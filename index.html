@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Timer</title>
+    <style>
+        .red {
+            color: red;
+        }
+        .green {
+            color: green;
+        }
+        button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="totalTime">TOTAL MEETING TIME: 0:00:00</div>
+    <div id="topics">
+        <div class="topic" data-time="600">
+            <div class="title">Topic 1: 10 MIN</div>
+            <div class="subtopic" data-time="420">
+                <span>Sub topic a: 7 min</span>
+                <button onclick="endSubTopic(this)">End Subtopic</button>
+            </div>
+            <div class="subtopic" data-time="180">
+                <span>Sub topic b: 3 min</span>
+                <button onclick="endSubTopic(this)">End Subtopic</button>
+            </div>
+        </div>
+        <div class="topic" data-time="300">
+            <div class="title">Topic 2: 5 MIN</div>
+        </div>
+    </div>
+    <script>
+        let startTime = Date.now();
+        let elapsedTime = 0;
+        let currentSubTopic = null;
+
+        function formatTime(time) {
+            let minutes = Math.floor(time / 60);
+            let seconds = time % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            let currentTime = Date.now();
+            elapsedTime = Math.floor((currentTime - startTime) / 1000);
+
+            document.getElementById('totalTime').innerText = `TOTAL MEETING TIME: ${formatTime(elapsedTime)}`;
+
+            document.querySelectorAll('.topic').forEach(topic => {
+                let topicTime = parseInt(topic.dataset.time);
+                let subTopics = topic.querySelectorAll('.subtopic');
+
+                subTopics.forEach(subtopic => {
+                    let subTopicTime = parseInt(subtopic.dataset.time);
+                    let remainingTime = subTopicTime - elapsedTime;
+                    let text = `-- ${formatTime(elapsedTime)} REMAINING: ${formatTime(remainingTime)}`;
+                    subtopic.querySelector('span').innerText = text;
+                    subtopic.querySelector('span').className = remainingTime >= 0 ? 'green' : 'red';
+                });
+            });
+        }
+
+        function endSubTopic(button) {
+            if (currentSubTopic) {
+                let subTopicTime = parseInt(currentSubTopic.dataset.time);
+                let remainingTime = subTopicTime - elapsedTime;
+                let text = `-- [${formatTime(elapsedTime)}][${formatTime(remainingTime)}]`;
+                currentSubTopic.querySelector('span').innerText = text;
+                currentSubTopic.querySelector('span').className = remainingTime >= 0 ? 'green' : 'red';
+                currentSubTopic.querySelector('button').disabled = true;
+            }
+
+            currentSubTopic = button.parentElement;
+            startTime = Date.now();
+            elapsedTime = 0;
+        }
+
+        setInterval(updateDisplay, 1000);
+    </script>
+</body>
+</html>
