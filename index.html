@@ -11,33 +11,42 @@
         .green {
             color: green;
         }
+        .current {
+            font-weight: bold;
+        }
         button {
             margin-left: 10px;
+        }
+        .topic, .subtopic {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div id="totalTime">TOTAL MEETING TIME: 0:00:00</div>
+    <div id="remainingTime">REMAINING MEETING TIME: 0:00:00</div>
     <div id="topics">
         <div class="topic" data-time="600">
             <div class="title">Topic 1: 10 MIN</div>
             <div class="subtopic" data-time="420">
                 <span>Sub topic a: 7 min</span>
-                <button onclick="endSubTopic(this)">End Subtopic</button>
+                <button onclick="endTopic(this)">End Topic</button>
             </div>
             <div class="subtopic" data-time="180">
                 <span>Sub topic b: 3 min</span>
-                <button onclick="endSubTopic(this)">End Subtopic</button>
+                <button onclick="endTopic(this)">End Topic</button>
             </div>
         </div>
         <div class="topic" data-time="300">
             <div class="title">Topic 2: 5 MIN</div>
+            <button onclick="endTopic(this)">End Topic</button>
         </div>
     </div>
     <script>
+        let totalMeetingTime = 900; // 15 minutes in seconds
         let startTime = Date.now();
         let elapsedTime = 0;
-        let currentSubTopic = null;
+        let currentTopic = null;
 
         function formatTime(time) {
             let minutes = Math.floor(time / 60);
@@ -50,34 +59,44 @@
             elapsedTime = Math.floor((currentTime - startTime) / 1000);
 
             document.getElementById('totalTime').innerText = `TOTAL MEETING TIME: ${formatTime(elapsedTime)}`;
+            document.getElementById('remainingTime').innerText = `REMAINING MEETING TIME: ${formatTime(totalMeetingTime - elapsedTime)}`;
 
             document.querySelectorAll('.topic').forEach(topic => {
                 let topicTime = parseInt(topic.dataset.time);
                 let subTopics = topic.querySelectorAll('.subtopic');
 
-                subTopics.forEach(subtopic => {
-                    let subTopicTime = parseInt(subtopic.dataset.time);
-                    let remainingTime = subTopicTime - elapsedTime;
-                    let text = `-- ${formatTime(elapsedTime)} REMAINING: ${formatTime(remainingTime)}`;
-                    subtopic.querySelector('span').innerText = text;
-                    subtopic.querySelector('span').className = remainingTime >= 0 ? 'green' : 'red';
-                });
+                if (subTopics.length === 0) {
+                    // Handle topics without subtopics
+                    let remainingTime = topicTime - elapsedTime;
+                    topic.querySelector('.title').className = remainingTime >= 0 ? 'green' : 'red';
+                    topic.querySelector('.title').innerText = `Topic: ${formatTime(topicTime)} -- ${formatTime(elapsedTime)} REMAINING: ${formatTime(remainingTime)}`;
+                } else {
+                    // Handle topics with subtopics
+                    subTopics.forEach(subtopic => {
+                        let subTopicTime = parseInt(subtopic.dataset.time);
+                        let remainingTime = subTopicTime - elapsedTime;
+                        let text = `-- ${formatTime(elapsedTime)} REMAINING: ${formatTime(remainingTime)}`;
+                        subtopic.querySelector('span').innerText = text;
+                        subtopic.querySelector('span').className = remainingTime >= 0 ? 'green' : 'red';
+                    });
+                }
             });
         }
 
-        function endSubTopic(button) {
-            if (currentSubTopic) {
-                let subTopicTime = parseInt(currentSubTopic.dataset.time);
-                let remainingTime = subTopicTime - elapsedTime;
+        function endTopic(button) {
+            if (currentTopic) {
+                let topicTime = parseInt(currentTopic.dataset.time);
+                let remainingTime = topicTime - elapsedTime;
                 let text = `-- [${formatTime(elapsedTime)}][${formatTime(remainingTime)}]`;
-                currentSubTopic.querySelector('span').innerText = text;
-                currentSubTopic.querySelector('span').className = remainingTime >= 0 ? 'green' : 'red';
-                currentSubTopic.querySelector('button').disabled = true;
+                currentTopic.querySelector('span').innerText = text;
+                currentTopic.querySelector('span').className = remainingTime >= 0 ? 'green' : 'red';
+                currentTopic.querySelector('button').disabled = true;
             }
 
-            currentSubTopic = button.parentElement;
+            currentTopic = button.parentElement;
             startTime = Date.now();
             elapsedTime = 0;
+            currentTopic.classList.add('current');
         }
 
         setInterval(updateDisplay, 1000);
