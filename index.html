@@ -104,6 +104,7 @@ function startSimulation() {
 
 function stopSimulation() {
   clearInterval(animationFrameId);
+  animationFrameId = null; // Clear the reference to ensure you can check if it's running
 }
 
 canvas.addEventListener('click', function(event) {
@@ -124,12 +125,12 @@ document.getElementById('speedControl').addEventListener('input', function(event
   }
 });
 
-window.onload = () => {
+window.addEventListener('DOMContentLoaded', () => {
   canvas.width = gridWidth * cellSize;
   canvas.height = gridHeight * cellSize;
   initializeGrid();
   drawGrid();
-};
+});
 </script>
 </body>
 </html>
