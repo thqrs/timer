@@ -8,6 +8,8 @@
   body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
   canvas { border: 1px solid black; cursor: pointer; }
   label, button, input { margin: 5px; }
+  .type-info { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+  .type-box { margin: 5px; padding: 5px; border-radius: 5px; color: #fff; font-size: 14px; display: flex; align-items: center; }
 </style>
 </head>
 <body>
@@ -16,6 +18,7 @@
 <input type="range" id="speedControl" min="1" max="1000" value="500">
 <button id="startButton">Start</button>
 <button id="stopButton">Stop</button>
+<div class="type-info" id="typeInfo"></div>
 <script>
 const canvas = document.getElementById('battleCanvas');
 const ctx = canvas.getContext('2d');
@@ -28,6 +31,7 @@ const typeColors = {
   dragon: '#7038F8', dark: '#705848', steel: '#B8B8D0'
 };
 let grid = [];
+let typeCounts = {};
 let animationFrameId;
 let animationSpeed = 500; // in milliseconds
 const gridWidth = 100; // width in cells
@@ -38,6 +42,25 @@ function initializeGrid() {
   grid = Array.from({length: gridHeight}, () =>
     Array.from({length: gridWidth}, () => types[Math.floor(Math.random() * types.length)])
   );
+  updateTypeCounts();
+  updateTypeInfoDisplay();
+}
+
+function updateTypeCounts() {
+  typeCounts = types.reduce((acc, type) => ({ ...acc, [type]: 0 }), {});
+  grid.forEach(row => row.forEach(type => typeCounts[type]++));
+}
+
+function updateTypeInfoDisplay() {
+  const typeInfo = document.getElementById('typeInfo');
+  typeInfo.innerHTML = ''; // Clear previous info
+  Object.keys(typeColors).forEach(type => {
+    const typeBox = document.createElement('div');
+    typeBox.className = 'type-box';
+    typeBox.style.backgroundColor = typeColors[type];
+    typeBox.textContent = `${type.toUpperCase()}: ${typeCounts[type]}`;
+    typeInfo.appendChild(typeBox);
+  });
 }
 
 function drawGrid() {
@@ -69,6 +92,8 @@ function updateGrid() {
     }
   }
   grid = newGrid;
+  updateTypeCounts();
+  updateTypeInfoDisplay();
   drawGrid();
 }
 
@@ -86,6 +111,8 @@ canvas.addEventListener('click', function(event) {
   const x = Math.floor((event.clientX - rect.left) / cellSize);
   const y = Math.floor((event.clientY - rect.top) / cellSize);
   grid[y][x] = types[(types.indexOf(grid[y][x]) + 1) % types.length];
+  updateTypeCounts();
+  updateTypeInfoDisplay();
   drawGrid();
 });
 
@@ -96,9 +123,6 @@ document.getElementById('speedControl').addEventListener('input', function(event
     startSimulation();
   }
 });
-
-document.getElementById('startButton').addEventListener('click', startSimulation);
-document.getElementById('stopButton').addEventListener('click', stopSimulation);
 
 window.onload = () => {
   canvas.width = gridWidth * cellSize;
